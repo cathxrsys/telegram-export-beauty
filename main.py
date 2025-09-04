@@ -46,20 +46,38 @@ def convert(file_path):
 
         a.replace_with(audio_tag)
 
+    # Add round message
+
+    for a in soup.find_all('a', class_='media_video'):
+        mp4_href = a.get('href')
+        if 'round' in mp4_href:
+            thumb_img = a.find('img', class_='thumb pull_left')
+            poster = thumb_img['src'] if thumb_img and thumb_img.has_attr('src') else ""
+            video_tag = soup.new_tag('video', controls=True)
+            video_tag['src'] = mp4_href
+            video_tag['width'] = "300"
+            video_tag['height'] = "300"
+            if poster:
+                video_tag['poster'] = poster
+            video_tag['style'] = "border-radius:50%; background:#000;"  # Круглый стиль как у Telegram
+            video_tag.string = 'Ваш браузер не поддерживает видео'
+            a.replace_with(video_tag)
+
     # Change GIFS
 
-    for a in soup.find_all('a', class_='animated_wrap'):
+    for a in soup.find_all('a', class_='animated_wrap') + soup.find_all('a', class_='media_video'):
         mp4_href = a['href']
-        video_tag = soup.new_tag('video', controls=True, loop=True, autoplay=False)
-        video_tag['src'] = mp4_href
-        video_tag['width'] = "260"  # Можно взять из style, если нужно
-        video_tag['height'] = "260"
-        video_tag.string = 'Ваш браузер не поддерживает видео'
-        # Можно добавить постер (обложку), если есть <img ... src="..._thumb.jpg">
-        thumb_img = a.find('img', class_='animated')
-        if thumb_img and thumb_img.has_attr('src'):
-            video_tag['poster'] = thumb_img['src']
-        a.replace_with(video_tag)
+        if 'video' in mp4_href and 'round' not in mp4_href:
+            video_tag = soup.new_tag('video', controls=True, loop=True, autoplay=False)
+            video_tag['src'] = mp4_href
+            video_tag['width'] = "260"  # Можно взять из style, если нужно
+            video_tag['height'] = "260"
+            video_tag.string = 'Ваш браузер не поддерживает видео'
+            # Можно добавить постер (обложку), если есть <img ... src="..._thumb.jpg">
+            thumb_img = a.find('img', class_='animated')
+            if thumb_img and thumb_img.has_attr('src'):
+                video_tag['poster'] = thumb_img['src']
+            a.replace_with(video_tag)
 
     # Change videos
 
@@ -80,22 +98,6 @@ def convert(file_path):
         a.replace_with(video_tag)
         if duration:
             video_tag.insert_after(duration)
-
-    # Add round message
-
-    for a in soup.find_all('a', class_='media_video'):
-        mp4_href = a.get('href')
-        thumb_img = a.find('img', class_='thumb')
-        poster = thumb_img['src'] if thumb_img and thumb_img.has_attr('src') else ""
-        video_tag = soup.new_tag('video', controls=True)
-        video_tag['src'] = mp4_href
-        video_tag['width'] = "200"  # Можно скорректировать
-        video_tag['height'] = "200"
-        if poster:
-            video_tag['poster'] = poster
-        video_tag['style'] = "border-radius:50%; background:#000;"  # Круглый стиль как у Telegram
-        video_tag.string = 'Ваш браузер не поддерживает видео'
-        a.replace_with(video_tag)
 
     # Add JS for scaling images
 
